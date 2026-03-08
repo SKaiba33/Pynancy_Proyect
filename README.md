@@ -1,2 +1,2 @@
 # Pynancy_Proyect
-Proyecto de registro de estado financiero usando python.
+Proyecto de registro de estado financiero usando python y tkinter
