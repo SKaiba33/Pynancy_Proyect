@@ -2,6 +2,10 @@
 
 Aplicación de escritorio hecha en Python con Tkinter para registro de ingresos y gastos.
 
+<p aling="center">
+    <img src="images/screnshot.png" alt="Pynancy app Screenshot" width="500">
+</p>
+
 Permite:
 - Regisstrar movimientos
 - Visualizar historial en tabla
