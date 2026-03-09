@@ -17,6 +17,31 @@ class App:
 
 		self.balance_valor = tk.StringVar()
 
+		style= ttk.Style()
+
+		style.map(
+			"Treeview",
+			background=[("selected", "#6E7D4E")],
+			foreground=[("selected", "#FFFFFF")]
+		)
+
+		style.configure(
+			"Treeview.Heading",
+			font=("Segoe UI", 10, "bold")
+		)
+
+		style.configure(
+			"Treeview",
+			font=("Segoe UI", 10),
+			rowheight=25
+		)
+
+		style.configure(
+			"Bg_mainframe.TFrame",
+			background="#D8E0C7"
+		)
+
+
 		self.crear_widgets()
 
 		self.cargar_tabla()
@@ -25,31 +50,39 @@ class App:
 
 	def crear_widgets(self):
 
+		self.main_frame = ttk.Frame(self.root, style="Bg_mainframe.TFrame")
+		self.main_frame.pack(fill="both", expand=True,)
+		self.main_frame.bind("<Button-1>", self.deseleccionar_tabla, add="+")
+		
+
 		###Balance###
 
 		self.label_balance_titulo = tk.Label(
-			self.root,
+			self.main_frame,
 			text = "BALANCE ACTUAL",
-			font = ("Arial", 12)
+			font=("Segoe UI", 12),
+			background='#D8E0C7'
 		)
 		self.label_balance_titulo.grid(row=0, column=0, columnspan=2, pady=(15,0))
 
 		self.label_balance = tk.Label(
-			self.root,
+			self.main_frame,
 			textvariable=self.balance_valor,
-			font=("Arial",18)
+			font=("Arial",18),
+			background='#D8E0C7'
 		)
 		self.label_balance.grid(row=1, column=0, columnspan=2, pady=(0,15))
 
 
 
 		###ENTRADA MONTO###
-		vcmd = (self.root.register(self.validar_entero), "%P") #esta va con el validador de enteros
+		vcmd = (self.main_frame.register(self.validar_entero), "%P") #esta va con el validador de enteros
 
 		self.entry_monto = ttk.Entry(
-			self.root,
+			self.main_frame,
 			validate="key",
-			validatecommand=vcmd
+			validatecommand=vcmd,
+			justify="center",
 		)
 		self.entry_monto.grid(row=2, column= 0, columnspan=2, padx=20, sticky="ew")
 
@@ -57,15 +90,19 @@ class App:
 		###BOTONES_MONTO###
 
 		self.boton_ingreso = tk.Button(
-			self.root,
+			self.main_frame,
 			text="+",
+			background="#6E7D4E",
+			fg="grey18",
 			command=self.agregar_ingreso
 		)
 		self.boton_ingreso.grid(row=3, column=0, pady=10, padx=20, sticky="ew")
 
 		self.boton_egreso = tk.Button(
-			self.root,
+			self.main_frame,
 			text="-",
+			background="#AA7229",
+			fg="grey18",
 			command=self.agregar_egreso
 		)
 		self.boton_egreso.grid(row=3, column=1, pady=10, padx=20, sticky="ew")
@@ -74,16 +111,20 @@ class App:
 		###TABLA###
 
 		self.tree = ttk.Treeview(
-			self.root,
+			self.main_frame,
 			columns=("fecha", "tipo", "monto"),
 			show="headings",
-			selectmode="browse"
+			selectmode="browse",
 		)
 
-
+		self.actualizar_balance
 		self.tree.heading("fecha", text="Fecha")
 		self.tree.heading("tipo", text="Tipo")
 		self.tree.heading("monto", text="Monto")
+
+
+		self.tree.tag_configure("ingreso", foreground="#6E7D4E")
+		self.tree.tag_configure("egreso", foreground="#AA7229")
 
 
 		self.tree.column("fecha", width=120, anchor="center", stretch=False)
@@ -99,7 +140,7 @@ class App:
 		###ELSCROLL_VERTICAL###
 
 		self.scrollbar = ttk.Scrollbar(
-			self.root,
+			self.main_frame,
 			orient="vertical",
 			command=self.tree.yview
 		)
@@ -109,19 +150,21 @@ class App:
 
 		###BOTON_ELIMINAR###
 		self.boton_eliminar = tk.Button(
-			self.root,
+			self.main_frame,
+			font=("Segoe UI", 10),
 			text="Eliminar",
 			command=self.eliminar_movimiento,
-			state="disabled"
+			state="disabled",
+			background="#F0C48C"
 		)
 		self.boton_eliminar.grid(row=5, column=0,columnspan=2, pady=10)
 
 
 
 		###AJUSTAR_TABLA###
-		self.root.grid_rowconfigure(4, weight=1)
-		self.root.grid_columnconfigure(0, weight=1)
-		self.root.grid_columnconfigure(1, weight=1)
+		self.main_frame.grid_rowconfigure(4, weight=1)
+		self.main_frame.grid_columnconfigure(0, weight=1)
+		self.main_frame.grid_columnconfigure(1, weight=1)
 	
 
 
@@ -134,11 +177,17 @@ class App:
 		for movimiento in self.movimientos_ord:
 			fecha = datetime.strptime(movimiento.fecha, "%Y-%m-%dT%H:%M:%S.%f")
 			fecha_con_formato = fecha.strftime("%d-%m-%Y")
+			monto_f = (f"{movimiento.monto:,.0f}")
+			if movimiento.tipo == "ingreso":
+				tag_tipo = "ingreso"
+			else:
+				tag_tipo = "egreso"
 			self.tree.insert(
 				"",
 				"end",
 				iid=movimiento.id,
-				values=(fecha_con_formato, movimiento.tipo, movimiento.monto))
+				values=(fecha_con_formato, movimiento.tipo, monto_f),
+				tags=(tag_tipo))
 
 		self.actualizar_balance()
 
@@ -179,6 +228,13 @@ class App:
 			self.boton_eliminar.config(state="normal")
 		else:
 			self.boton_eliminar.config(state="disabled")
+
+	
+	def deseleccionar_tabla(self, event):
+		widget = event.widget
+
+		if widget != self.tree and widget != self.boton_eliminar:
+			self.tree.selection_remove(self.tree.selection())
 
 
 	def agregar_ingreso(self):
@@ -246,8 +302,3 @@ class App:
 			print(f"ok, {self.tree.selection()}")
 		else:
 			print("not")
-
-
-
-
-
