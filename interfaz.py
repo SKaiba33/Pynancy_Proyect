@@ -50,68 +50,95 @@ class App:
 
 	def crear_widgets(self):
 
+		##Main Frame##
 		self.main_frame = ttk.Frame(self.root, style="Bg_mainframe.TFrame")
 		self.main_frame.pack(fill="both", expand=True,)
 		self.main_frame.bind("<Button-1>", self.deseleccionar_tabla, add="+")
-		
+
+
+		##Balance Frame##
+		self.balance_frame = ttk.Frame(self.main_frame, style="Bg_mainframe.TFrame")
+		self.balance_frame.pack_propagate(False)
+		self.balance_frame.pack(fill="x", expand=False)
+		self.balance_frame.bind("<Button-1>", self.deseleccionar_tabla, add="+")
+
+		self.balance_frame.columnconfigure(0, weight=1)
+
 
 		###Balance###
 
 		self.label_balance_titulo = tk.Label(
-			self.main_frame,
+			self.balance_frame,
 			text = "BALANCE ACTUAL",
 			font=("Segoe UI", 12),
 			background='#D8E0C7'
 		)
-		self.label_balance_titulo.grid(row=0, column=0, columnspan=2, pady=(15,0))
+		self.label_balance_titulo.grid(row=0, column=0, pady=(15,0))
 
 		self.label_balance = tk.Label(
-			self.main_frame,
+			self.balance_frame,
 			textvariable=self.balance_valor,
 			font=("Arial",18),
 			background='#D8E0C7'
 		)
-		self.label_balance.grid(row=1, column=0, columnspan=2, pady=(0,15))
+		self.label_balance.grid(row=1, column=0, pady=(0,15))
 
 
+		##Entry Frame##
+
+		self.entry_frame = ttk.Frame(self.main_frame, style="Bg_mainframe.TFrame")
+		self.entry_frame.pack_propagate(False)
+		self.entry_frame.pack(fill="x", expand=False)
+		self.entry_frame.bind("<Button-1>", self.deseleccionar_tabla, add="+")
+
+		self.entry_frame.columnconfigure(0, weight=1)
+		self.entry_frame.columnconfigure(1, weight=1)
 
 		###ENTRADA MONTO###
-		vcmd = (self.main_frame.register(self.validar_entero), "%P") #esta va con el validador de enteros
+		vcmd = (self.entry_frame.register(self.validar_entero), "%P") #esta va con el validador de enteros
 
 		self.entry_monto = ttk.Entry(
-			self.main_frame,
+			self.entry_frame,
 			validate="key",
 			validatecommand=vcmd,
 			justify="center",
 		)
-		self.entry_monto.grid(row=2, column= 0, columnspan=2, padx=20, sticky="ew")
+		self.entry_monto.grid(row=0, column= 0, columnspan=2, padx=20, sticky="ew")
 
 
 		###BOTONES_MONTO###
 
 		self.boton_ingreso = tk.Button(
-			self.main_frame,
-			text="+",
+			self.entry_frame,
+			text="INGRESO",
 			background="#6E7D4E",
-			fg="grey18",
+			fg="LemonChiffon2",
 			command=self.agregar_ingreso
 		)
-		self.boton_ingreso.grid(row=3, column=0, pady=10, padx=20, sticky="ew")
+		self.boton_ingreso.grid(row=1, column=0, pady=10, padx=20, sticky="ew")
 
 		self.boton_egreso = tk.Button(
-			self.main_frame,
-			text="-",
+			self.entry_frame,
+			text="EGRESO",
 			background="#AA7229",
-			fg="grey18",
+			fg="LemonChiffon2",
 			command=self.agregar_egreso
 		)
-		self.boton_egreso.grid(row=3, column=1, pady=10, padx=20, sticky="ew")
+		self.boton_egreso.grid(row=1, column=1, pady=10, padx=20, sticky="ew")
 
+		##Treeview Frame##
+		self.treeview_frame = ttk.Frame(self.main_frame, style="Bg_mainframe.TFrame")
+		self.treeview_frame.pack_propagate(False)
+		self.treeview_frame.pack(fill="both", expand=True)
+		self.treeview_frame.bind("<Button-1>", self.deseleccionar_tabla, add="+")
+
+		self.treeview_frame.columnconfigure(0, weight=1)
+		self.treeview_frame.rowconfigure(0, weight=1)
 
 		###TABLA###
 
 		self.tree = ttk.Treeview(
-			self.main_frame,
+			self.treeview_frame,
 			columns=("fecha", "tipo", "monto"),
 			show="headings",
 			selectmode="browse",
@@ -127,11 +154,11 @@ class App:
 		self.tree.tag_configure("egreso", foreground="#AA7229")
 
 
-		self.tree.column("fecha", width=120, anchor="center", stretch=False)
-		self.tree.column("tipo", width=104, anchor="center", stretch=False)
-		self.tree.column("monto", width=120, anchor="e", stretch=False)
+		self.tree.column("fecha", width=120, anchor="center")
+		self.tree.column("tipo", width=104, anchor="center", stretch= False)
+		self.tree.column("monto", width=120, anchor="e")
 
-		self.tree.grid(row=4, column=0, columnspan=2, padx=20, pady=10, sticky="nsew")
+		self.tree.grid(row=0, column=0, columnspan=2, padx=20, pady=10, sticky="nsew")
 
 
 		self.tree.bind("<Button-1>", self.bloquear_ajuste)
@@ -140,31 +167,25 @@ class App:
 		###ELSCROLL_VERTICAL###
 
 		self.scrollbar = ttk.Scrollbar(
-			self.main_frame,
+			self.treeview_frame,
 			orient="vertical",
 			command=self.tree.yview
 		)
 		self.tree.configure(yscrollcommand=self.scrollbar.set)
-		self.scrollbar.grid(row=4, column=2, sticky="ns", pady=10)
+		self.scrollbar.grid(row=0, column=1, sticky="ns", pady=10)
 
 
 		###BOTON_ELIMINAR###
 		self.boton_eliminar = tk.Button(
-			self.main_frame,
+			self.treeview_frame,
 			font=("Segoe UI", 10),
 			text="Eliminar",
 			command=self.eliminar_movimiento,
 			state="disabled",
 			background="#F0C48C"
 		)
-		self.boton_eliminar.grid(row=5, column=0,columnspan=2, pady=10)
+		self.boton_eliminar.grid(row=1, column=0, pady=(0,10))
 
-
-
-		###AJUSTAR_TABLA###
-		self.main_frame.grid_rowconfigure(4, weight=1)
-		self.main_frame.grid_columnconfigure(0, weight=1)
-		self.main_frame.grid_columnconfigure(1, weight=1)
 	
 
 
@@ -217,7 +238,7 @@ class App:
 			return
 		else:
 			id_movimiento = seleccion[0]
-			print(f"Eliminando...{id_movimiento}")
+			print(f"Eliminando... {id_movimiento}")
 			self.registro.eliminar(id_movimiento)
 			self.cargar_tabla()
 
@@ -228,6 +249,7 @@ class App:
 			self.boton_eliminar.config(state="normal")
 		else:
 			self.boton_eliminar.config(state="disabled")
+
 
 	
 	def deseleccionar_tabla(self, event):
