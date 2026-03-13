@@ -3,11 +3,12 @@ from datetime import datetime
 
 
 class Movimiento:
-	def __init__(self, id, monto, tipo):
+	def __init__(self, id, monto, tipo, metodo):
 		self.id = id
 		self.fecha = datetime.now().isoformat()
 		self.monto = float(monto)
 		self.tipo = tipo  #solo "ingreso" o "egreso"
+		self.metodo = metodo #solo "cash" o "bank"
 
 
 	def to_dict(self):
@@ -15,18 +16,18 @@ class Movimiento:
 		"id": self.id,
 		"fecha": self.fecha,
 		"monto": self.monto,
-		"tipo": self.tipo
-
+		"tipo": self.tipo,
+		"metodo": self.metodo
 		}
 
 	@staticmethod
 	def from_dict(data):
-		obj = Movimiento(data["id"], data["monto"], data["tipo"])
+		obj = Movimiento(data["id"], data["monto"], data["tipo"], data["metodo"])
 		obj.fecha = data["fecha"]
 		return obj
 
 	def __repr__(self):
-		return f"[{self.id}] {self.fecha} | {self.tipo.upper()} | {self.monto}"
+		return f"[{self.id}] {self.fecha} |{self.metodo}| {self.tipo.upper()} | {self.monto}"
 
 class RegistroFinanzas:
 	def __init__(self):
@@ -63,9 +64,9 @@ class RegistroFinanzas:
 			)
 
 
-	def agregar(self, monto, tipo):
+	def agregar(self, monto, tipo, metodo):
 		self._ultimo_id += 1
-		movimiento = Movimiento(self._ultimo_id, monto, tipo)
+		movimiento = Movimiento(self._ultimo_id, monto, tipo, metodo)
 		self.movimientos.append(movimiento)
 		self.guardar()
 
@@ -77,11 +78,20 @@ class RegistroFinanzas:
 		self.guardar()
 
 
-	def balance(self):
+	def balance_general(self):
 		return sum(
 			mov.monto if mov.tipo == "ingreso" else -mov.monto
 			for mov in self.movimientos
 			)
+	
+	def balance_puntual(self, clave):
+		res = 0
+		for mov in self.movimientos:
+			if mov.metodo == clave and mov.tipo == "ingreso":
+				res += mov.monto
+			if mov.metodo == clave and mov.tipo == "egreso":
+				res -= mov.monto
+		return res
 
 	def mostrar(self):
 		for mov in self.movimientos:
@@ -101,20 +111,20 @@ if __name__ == "__main__":
 	registro = RegistroFinanzas()
 
 
-	registro.agregar(500000, "ingreso")
-	registro.agregar(1200000, "ingreso")
-	registro.agregar(700000, "egreso")
+	registro.agregar(500000, "ingreso", "cash")
+	registro.agregar(1200000, "ingreso", "cash")
+	registro.agregar(700000, "egreso", "cash")
 
 	print("Movimiento:")
 	registro.mostrar()
 
-	print("\nBalance actual: ", registro.balance())
+	print("\nBalance actual: ", registro.balance_general())
 
 
 	print("\nEliminando ID 2...\n")
 	registro.eliminar(2)
 
 	registro.mostrar()
-	print("\nBalance actual:", registro.balance())
+	print("\nBalance actual:", registro.balance_general())
 
 
